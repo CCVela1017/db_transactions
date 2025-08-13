@@ -1,6 +1,7 @@
 import tkinter as tk
 import mysql.connector
 from tkinter import messagebox
+from tkinter import ttk
 
 conexion = None
 cursor = None
@@ -11,7 +12,7 @@ def conectar_bd():
         conexion = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="2025000",
+            password="319393",
             database="base_ejemplo"
         )
         cursor = conexion.cursor()
@@ -20,7 +21,6 @@ def conectar_bd():
 
 def start_transaction():
     global conexion
-    conectar_bd()
     if conexion:
         conexion.start_transaction()
         messagebox.showinfo("Transacción", "Transacción iniciada")
@@ -63,12 +63,35 @@ def rollback_transaction():
         cursor.close()
         conexion.close()
 
+def combobox_aislamiento(event):
+    global conexion, cursor
+    conectar_bd()
+    nivelelegido = combobox.get()
+    try:
+        
+        cursor.execute(f"SET TRANSACTION ISOLATION LEVEL {nivelelegido}")
+        
+       
+        
+        messagebox.showinfo(nivelelegido, f"Nivel de aislamiento establecido a {nivelelegido}")
+    
+    except mysql.connector.Error as err:
+        messagebox.showerror("Error", f"Error al intentar establecer el nivel de aislamineto {err}")
+
+
 root = tk.Tk()
 root.title("Formulario de Usuarios")
 
 tk.Label(root, text="Nombre:").grid(row=0, column=0, padx=10, pady=5)
 entry_nombre = tk.Entry(root)
 entry_nombre.grid(row=0, column=1, padx=10, pady=5)
+
+opciones = ["READ UNCOMMITTED", "READ COMMITED", "REPEATABLE READ", "SERIALIZABLE"]
+combobox = ttk.Combobox(root, values=opciones, state="readonly")
+combobox.set("Selecciona una opción") 
+combobox.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
+
+combobox.bind("<<ComboboxSelected>>", combobox_aislamiento)
 
 btn_start = tk.Button(root, text="Start", command=start_transaction)
 btn_start.grid(row=1, column=0, columnspan=2, pady=5)
