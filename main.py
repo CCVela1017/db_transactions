@@ -16,8 +16,10 @@ def conectar_bd():
             password="2025000",
             database="base_ejemplo"
         )
+        conexion.autocommit = True
         cursor = conexion.cursor()
         recargar_tabla(tabla)
+        conexion.commit()
     except mysql.connector.Error as err:
         messagebox.showerror("Error", f"Error al conectar con MySQL: {err}")
 
@@ -25,6 +27,7 @@ def start_transaction():
     global conexion
     if conexion:
         conexion.start_transaction()
+        combobox.config(state="disabled")
         messagebox.showinfo("Transacción", "Transacción iniciada")
 
 def insertar_usuario():
@@ -48,12 +51,10 @@ def commit_transaction():
     global conexion, cursor
     try:
         conexion.commit()
+        combobox.config(state="normal")
         messagebox.showinfo("Commit", "Transacción confirmada")
     except mysql.connector.Error as err:
         messagebox.showerror("Error", f"Error al hacer commit: {err}")
-    finally:
-        cursor.close()
-        conexion.close()
 
 def rollback_transaction():
     global conexion, cursor, tabla
@@ -61,11 +62,9 @@ def rollback_transaction():
         conexion.rollback()
         messagebox.showinfo("Rollback", "Transacción cancelada")
         recargar_tabla(tabla)
+        combobox.config(state="normal")
     except mysql.connector.Error as err:
         messagebox.showerror("Error", f"Error al hacer rollback: {err}")
-    finally:
-        cursor.close()
-        conexion.close()
 
 def combobox_aislamiento(event):
     global conexion, cursor
@@ -115,7 +114,7 @@ tk.Label(root, text="Nuevo nombre:").grid(row=1, column=0, padx=10, pady=5)
 entry_actualizar = tk.Entry(root)
 entry_actualizar.grid(row=1, column=1, padx=10, pady=5)
 
-opciones = ["READ UNCOMMITTED", "READ COMMITED", "REPEATABLE READ", "SERIALIZABLE"]
+opciones = ["READ UNCOMMITTED", "READ COMMITTED", "REPEATABLE READ", "SERIALIZABLE"]
 combobox = ttk.Combobox(root, values=opciones, state="readonly")
 combobox.set("Selecciona una opción") 
 combobox.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
